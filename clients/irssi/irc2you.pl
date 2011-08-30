@@ -134,9 +134,9 @@ sub sender {
         }
 
         if($targ =~ m/#/) {
-            info("hiligh in channel");
+            info("hilight in channel");
         } else {
-            info("hiligh from person");
+            info("hilight from person");
         }
 
         info("target: '" . $targ ."'");
@@ -185,7 +185,7 @@ sub sender {
 
 info("Started irc2you irssi client");
 
-Irssi::settings_add_int('irssi2you', 'irssi2you_context_rows', 4);
+Irssi::settings_add_int('irc2you', 'irc2you_context_rows', 4);
 
 Irssi::signal_add("print text", 'sender');
 Irssi::signal_add("event privmsg", 'push_buffer');

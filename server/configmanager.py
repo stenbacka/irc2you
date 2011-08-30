@@ -30,7 +30,7 @@ class ConfigManager:
     return notifier.parse(xml)
 
   def retrieveConfig(self, userName):
-    confPath = '/home/' + userName + '/.irssi/irssi2you_config.xml'
+    confPath = '/home/' + userName + '/.irssi/irc2you_config.xml'
     if (not os.path.exists(confPath)):
       log.error("Missing config file for user: " + userName)
       return None,0
