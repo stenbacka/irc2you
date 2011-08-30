@@ -1,0 +1,10 @@
+irc2you
+
+Use Case: Get notified about highlights you receive your (supported) IRC
+frontend. What notifications and where to send them can be configured.
+Possible destination include email and Android notifications.
+
+Basic flow: A plug-in to an IRC frontend catches and sends the highlight
+(with some related information) to a server-like program that, based on
+the user's configuration, propagates the highlight via some communication
+channel.
