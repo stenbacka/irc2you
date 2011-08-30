@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="notification">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="sender" type="xs:string" />
+        <xs:element name="message" type="xs:string" />
+        <xs:element name="channel" type="xs:string" />
+        <xs:element name="away" type="xs:boolean" />
+        <xs:element name="attached" type="xs:boolean" />
+        <xs:element name="context">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="context_item" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                      <xs:attribute name="from" type="xs:string"/>
+                      <xs:attribute name="username" type="xs:string"/>
+                      <xs:attribute name="timestamp" type="xs:integer"/>
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

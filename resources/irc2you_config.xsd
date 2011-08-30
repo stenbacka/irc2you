@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="notifiers">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="notifier"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="notifier">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="engine">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" ref="param"/>
+            </xs:sequence>
+            <xs:attribute name="type" type="xs:string" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="patterns" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element minOccurs="0" maxOccurs="unbounded" ref="pattern"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="param">
+   <xs:complexType>
+    <xs:simpleContent>
+     <xs:extension base="xs:string">
+      <xs:attribute name="name" type="xs:string"/>
+     </xs:extension>
+    </xs:simpleContent>
+   </xs:complexType>
+  </xs:element>
+  <xs:element name="pattern">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="sender" minOccurs="0" maxOccurs="unbounded" type="xs:string" />
+        <xs:element name="channel" minOccurs="0" maxOccurs="unbounded" type="xs:string" />
+        <xs:element name="away" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+        <xs:element name="attached" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+      </xs:sequence>
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="include"/>
+            <xs:enumeration value="exclude"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+
+
+
+
