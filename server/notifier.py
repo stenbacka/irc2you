@@ -21,7 +21,7 @@ class Notifier:
         if not p.match(msg): go = False
     failed=""
     if not go: failed = "not"
-    log.info("This notifier will " + failed + " execute")
+    log.debug("This notifier will " + failed + " execute")
     if go:
       log.debug("About to execute engine")
       if self.engine:

@@ -51,7 +51,7 @@ class ConfigManager:
       return None,0
 
   def configChanged(self,userName,modtime):
-    confPath = '/home/' + userName + '/.irssi/irssi2you_config.xml'
+    confPath = '/home/' + userName + '/.irssi/irc2you_config.xml'
     if (not os.path.exists(confPath)):
       log.error("Missing config file in configChanged, for user: " + userName)
       return False
