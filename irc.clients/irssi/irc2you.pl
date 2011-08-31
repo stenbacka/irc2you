@@ -9,6 +9,8 @@ use vars qw($VERSION %IRSSI);
 use User::pwent;
 use Data::Dumper;
 use Irssi::TextUI;
+use IO::Handle;
+use POSIX;
 
 use Log::Log4perl qw(:easy);
 #Log::Log4perl->easy_init($INFO);
@@ -51,6 +53,25 @@ sub warn {
   my ($string) = @_;
   Log::Log4perl::get_logger()->warning(Encode::encode_utf8($string));
 }
+
+my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => "/tmp/irc2you_socket") or die "Error $!\n";
+my ($reader, $writer);
+pipe($reader, $writer);
+$writer->autoflush(1);
+
+my $pid = fork();
+
+if ($pid <= 0) {
+    info("Starting receiver thread");
+    close($reader);
+    receivethread();
+    close($writer);
+    POSIX::_exit(1);
+}
+
+close($writer);
+Irssi::pidwait_add($pid);
+my $pipe_tag = Irssi::input_add(fileno($reader), Irssi::INPUT_READ, \&received, $reader);
 
 my %context_buffer = ();
 sub push_buffer {
@@ -143,7 +164,7 @@ sub sender {
         #info("text: " . $text . ", " . $stripped_text);
 
         if (($text_dest->{level} & (Irssi::MSGLEVEL_HILIGHT() | Irssi::MSGLEVEL_MSGS())) && ($text_dest->{level} & Irssi::MSGLEVEL_NOHILIGHT()) == 0) {
-            my $test = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => "/tmp/irc2you_socket") or die "Error $!\n";
+            #my $test = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => "/tmp/irc2you_socket") or die "Error $!\n";
 
             my $doc = XML::LibXML::Document->new('1.0', "utf-8");
             my $element = $doc->createElement("notification");
@@ -176,12 +197,57 @@ sub sender {
 
             $element->appendChild(create_context($doc,$targ));
 
-            print $test $element->toString();
-            $test->close();
+            my $text = $element->toString();
+            debug("sending message: '$text'");
+            print $socket $element->toString();
+            debug("messsage sent");
+            print $socket "\n";
+            #$test->close();
         }
         $working = 0;
    }
 }
+
+
+
+sub received {
+    my $reader = shift;
+    my $text   = <$reader>;
+    
+    if (!defined($text)) {
+        close($reader);
+        Irssi::input_remove($pipe_tag);  
+    } else {
+        info("received something on reader pipe");
+        info("got: '$text'");
+        info("$pid");
+        
+        my $dom = XML::LibXML->load_xml(string => $text);
+        my $rn  = $dom->getDocumentElement();
+        my $chn = $rn->getElementsByTagName("channel")->[0]->to_literal;
+        my $mes = $rn->getElementsByTagName("message")->[0]->to_literal;
+                
+        my $server = Irssi::active_server();
+        Irssi::Server::command($server, "/msg $chn $mes");
+        info("sent '/msg $chn $mes'");
+        
+    }
+}
+
+sub receivethread {
+    info("receive thread started");
+
+    while (!eof($socket)) {
+        defined( my $line = <$socket> )
+            or die "readline failed: $!";
+        info("got line from socket '$line'");
+        print($writer $line);
+    }
+    info("receivethread killed");
+    return;
+}
+
+
 
 info("Started irc2you irssi client");
 

@@ -42,37 +42,43 @@ configManager = ConfigManager()
 class MyHandler(SocketServer.StreamRequestHandler):
 
     def finish(self):
+        log.debug("socket closed")
         pass
 
     def handle(self):
-        messageXML = self.request.makefile().readline()
-        log.debug("Message: " + messageXML)
+        while(True):
+            log.debug("waiting for message")
+            messageXML = self.request.makefile().readline()
+            self.wfile.write(messageXML);
+            log.debug("Message: " + messageXML)
 
-        # Find username from unix socket
-        pid, uid, gid = struct.unpack('3i', \
-                self.server.socket.getsockopt(socket.SOL_SOCKET, 17, \
-                struct.calcsize('3i')))
-        username = pwd.getpwuid(uid).pw_name
+            # Find username from unix socket
+            pid, uid, gid = struct.unpack('3i', \
+                    self.server.socket.getsockopt(socket.SOL_SOCKET, 17, \
+                    struct.calcsize('3i')))
+            username = pwd.getpwuid(uid).pw_name
 
-        #log.debug("client: " + str(self.server.socket));
-        log.debug("pid: " + str(pid) + " uid: " + str(uid) + " gid: " + str(gid));
-        log.debug(pwd.getpwuid(uid))
+            #log.debug("client: " + str(self.server.socket));
+            log.debug("pid: " + str(pid) + " uid: " + str(uid) + " gid: " + str(gid));
+            log.debug(pwd.getpwuid(uid))
 
-        try:
-            message = objectify.fromstring(messageXML, messageParser)
+            try:
+                message = objectify.fromstring(messageXML, messageParser)
 
-            conf = configManager.getConfig(username)
-            if conf:
-                for n in conf.notifiers:
-                    log.debug("Executing notifier")
-                    n.execute(message)
-        except etree.XMLSyntaxError as element:
-            log.warn("Failed to parse message. Message: " + element.msg + \
-                     ", XML: " + messageXML)
+                conf = configManager.getConfig(username)
+                if conf:
+                    for n in conf.notifiers:
+                        log.debug("Executing notifier")
+                        n.execute(message)
+            except etree.XMLSyntaxError as element:
+                log.warn("Failed to parse message. Message: " + element.msg + \
+                         ", XML: " + messageXML)
 
-    #def setup(self):
+    #def setup(self, *args, **kwargs):
         #self.messageParser = self.initParser("irssi2you_message.xsd")
-     #   self.configManager = ConfigManager()
+        #self.configManager = ConfigManager()
+    #    SocketServer.StreamRequestHandler(self, *args, **kwargs)
+    #    log.debug("set up socket")
 
 
 def main(*args):
