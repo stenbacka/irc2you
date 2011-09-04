@@ -20,8 +20,8 @@ class Notifier:
       for p in self.patterns:
         if not p.match(msg): go = False
     failed=""
-    if not go: failed = "not"
-    log.debug("This notifier will " + failed + " execute")
+    if not go: failed = "not "
+    log.debug("This notifier will " + failed + "execute")
     if go:
       log.debug("About to execute engine")
       if self.engine:

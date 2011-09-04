@@ -1,4 +1,6 @@
 import logging 
+import configmanager
+
 #import amazon_ses
 
 log = logging.getLogger("notify")
@@ -61,16 +63,56 @@ class andoidnotificationengine(notificationengine):
     return True
 
 
+class EchoNotificationEngine(notificationengine):
+  def __init__(self):
+    pass
 
+  def execute(self,msg,params):
+    if 'echoer' in params:
+      conf = configmanager.configManager.getConfig(params['echoer'])
+      if conf:
+        if conf.messageQueue:
+          log.info("EchoNotifier: sending message")
+          conf.messageQueue.put(dict({'channel':msg.channel,'message':msg.message.text}))
+          return True
+        else:
+          return False
+          log.error("EchoEngine could not find message queue for " + params['echoer'])
+      else:
+        return False
+        log.error("EchoEngine could not find config for " + params['echoer'])
+    else:
+      log.error("EchoEngine is missing param: echoer")
+      return False
+
+
+
+class LogNotificationEngine(notificationengine):
+  def __init__(self):
+    pass
+
+  def execute(self,msg,params):
+    if params['body']:
+      body = params['body'].replace('%m', str(msg.message)).replace("%c", str(msg.channel)).replace("%s", str(msg.sender))
+    else:
+      body = msg.message.text
+    log.info("LogEngine -- Message:" + body)
+    return True
 
 emailEngine = EmailNotificationEngine()
 androidEngine = andoidnotificationengine()
+logEngine = LogNotificationEngine()
+echoEngine = EchoNotificationEngine()
 
 def get(engineName):
   if engineName == "email":
     return emailEngine
   elif engineName == "android":
     return androidEngine
+  elif engineName == "log":
+    return logEngine
+  elif engineName == "echo":
+    return echoEngine
   else:
     return None
 

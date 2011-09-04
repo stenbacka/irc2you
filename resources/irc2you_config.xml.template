@@ -1,21 +1,9 @@
 <notifiers>
   <notifier>
-    <engine type="email">
-      <param name="address">john.doe@gmail.com</param>
-      <param name="mode">single-notifications</param>
-      <param name="subject">(%s in %c)</param>
-      <param name="body">You got a hilight from %s in %c. The message was: %m</param>
+    <engine type="echo">
+      <param name="echoer">erik</param>
     </engine>
     <patterns>
-      <pattern type="include">
-        <channel>#q</channel> 
-      </pattern>
-      <pattern type="exclude">
-        <sender>erik</sender> 
-      </pattern>
     </patterns>
   </notifier>
-
-
-
 </notifiers>

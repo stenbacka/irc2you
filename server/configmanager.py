@@ -71,6 +71,8 @@ class ConfigManager:
         log.debug("Cached config changed for " + userName)
         c,m = self.retrieveConfig(userName)
         if c is not None:
+          c_old,m_old = self.configs[userName]
+          c.messageQueue = c_old.messageQueue
           self.configs[userName] = c,m;
         else:
           del self.configs[userName]
@@ -89,6 +91,8 @@ class ConfigManager:
 class Config:
   def __init__(self,_notifiers):
     self.notifiers = _notifiers
+
+configManager = ConfigManager()
 
 #conf = ConfigManager().getConfig('erik')
 #for n in conf.notifiers:

@@ -24,7 +24,10 @@ import pwd
 
 from lxml import etree
 from lxml import objectify
-from configmanager import ConfigManager
+from configmanager import configManager
+
+from Queue import Queue
+from threading import Thread
 
 def initParser(schemaFile):
   if not os.path.exists(schemaFile):
@@ -35,7 +38,7 @@ def initParser(schemaFile):
   return objectify.makeparser(schema = messageSchema)
 
 messageParser = initParser("resources/irc2you_message.xsd")
-configManager = ConfigManager()
+
 
 
 
@@ -52,7 +55,6 @@ class MyHandler(SocketServer.StreamRequestHandler):
             messageXML = self.rfile.readline()
             if(messageXML == ''):
                 break
-            self.wfile.write(messageXML)
             log.debug("Message: " + messageXML)
 
             # Find username from unix socket
@@ -76,13 +78,32 @@ class MyHandler(SocketServer.StreamRequestHandler):
             except etree.XMLSyntaxError as element:
                 log.warn("Failed to parse message. Message: " + element.msg + \
                          ", XML: " + messageXML)
+            log.debug("=====  This line has been intentionally left blank =====\n")
 
     def setup(self):
-        #self.messageParser = self.initParser("irssi2you_message.xsd")
-        #self.configManager = ConfigManager()
-        log.debug("seting up socket")
+        log.debug("setting up socket")
         SocketServer.StreamRequestHandler.setup(self)
-        log.debug("done seting up socket")
+        self.messageQueue = Queue()
+        t = Thread(target=self.message_sender)
+        t.daemon = True
+        t.start()
+        pid, uid, gid = struct.unpack('3i', \
+                self.server.socket.getsockopt(socket.SOL_SOCKET, 17, \
+                struct.calcsize('3i')))
+        username = pwd.getpwuid(uid).pw_name
+        conf = configManager.getConfig(username)
+        conf.messageQueue = self.messageQueue
+        log.debug("done setting up socket")
+
+    def message_sender(self):
+      while True:
+        log.debug("[server->client] Waiting for message")
+        item = self.messageQueue.get()
+        log.debug("[server->client] Got message " + str(item))
+        # Todo: Determine format of item
+        # Todo: validation of item
+        self.wfile.write("<notification><channel>"+item['channel']+"</channel><message>"+item['message']+"</message></notification>\n")
+        self.messageQueue.task_done()
 
 
 def main(*args):
