@@ -42,14 +42,17 @@ configManager = ConfigManager()
 class MyHandler(SocketServer.StreamRequestHandler):
 
     def finish(self):
+        log.debug("closing socket")
+        SocketServer.StreamRequestHandler.finish(self)
         log.debug("socket closed")
-        pass
 
     def handle(self):
         while(True):
             log.debug("waiting for message")
-            messageXML = self.request.makefile().readline()
-            self.wfile.write(messageXML);
+            messageXML = self.rfile.readline()
+            if(messageXML == ''):
+                break
+            self.wfile.write(messageXML)
             log.debug("Message: " + messageXML)
 
             # Find username from unix socket
@@ -58,8 +61,8 @@ class MyHandler(SocketServer.StreamRequestHandler):
                     struct.calcsize('3i')))
             username = pwd.getpwuid(uid).pw_name
 
-            #log.debug("client: " + str(self.server.socket));
-            log.debug("pid: " + str(pid) + " uid: " + str(uid) + " gid: " + str(gid));
+            #log.debug("client: " + str(self.server.socket))
+            log.debug("pid: " + str(pid) + " uid: " + str(uid) + " gid: " + str(gid))
             log.debug(pwd.getpwuid(uid))
 
             try:
@@ -74,11 +77,12 @@ class MyHandler(SocketServer.StreamRequestHandler):
                 log.warn("Failed to parse message. Message: " + element.msg + \
                          ", XML: " + messageXML)
 
-    #def setup(self, *args, **kwargs):
+    def setup(self):
         #self.messageParser = self.initParser("irssi2you_message.xsd")
         #self.configManager = ConfigManager()
-    #    SocketServer.StreamRequestHandler(self, *args, **kwargs)
-    #    log.debug("set up socket")
+        log.debug("seting up socket")
+        SocketServer.StreamRequestHandler.setup(self)
+        log.debug("done seting up socket")
 
 
 def main(*args):
@@ -86,12 +90,15 @@ def main(*args):
             SocketServer.UnixStreamServer): pass
 
     # Set named socket path and delete old socket, if any
-    namedsocket = os.path.join(tempfile.gettempdir(), 'irc2you_socket');
+    namedsocket = os.path.join(tempfile.gettempdir(), 'irc2you_socket')
     if(os.path.exists(namedsocket)):
-        os.remove(namedsocket);
+        os.remove(namedsocket)
 
-    server = SocketServer.UnixStreamServer(namedsocket, MyHandler)
-    os.chmod(namedsocket, 0777);
+    #server = SocketServer.UnixStreamServer(namedsocket, MyHandler)
+    server = ThreadingUnixStreamServer(namedsocket, MyHandler)
+    os.chmod(namedsocket, 0777)
+    
+    log.debug("Starting server...")
     server.serve_forever()
 
     return 0
